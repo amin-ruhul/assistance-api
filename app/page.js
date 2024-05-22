@@ -1,11 +1,14 @@
 "use client";
 
+import { splitText } from "@/utils/splitter";
+
 export default function Home() {
   async function fetchInfoData() {
     try {
       const res = await fetch("/data/info.txt");
       const text = await res.text();
-      console.log(text);
+      const spitedText = await splitText([text]);
+      console.log(spitedText);
     } catch (error) {
       console.log(error);
     }
