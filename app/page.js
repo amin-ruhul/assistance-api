@@ -1,6 +1,10 @@
 "use client";
 
+import { createStandaloneQuestion } from "@/config/langchain";
+import { useState } from "react";
+
 export default function Home() {
+  const [query, setQuery] = useState("");
   // async function fetchInfoData() {
   //   try {
   //     const res = await fetch("/data/info.txt");
@@ -11,6 +15,13 @@ export default function Home() {
   //   }
   // }
 
+  const handleUserQuery = async (e) => {
+    e.preventDefault();
+    console.log(query);
+    const res = await createStandaloneQuestion();
+    console.log(res);
+  };
+
   return (
     <main className="h-screen bg-slate-800 flex items-center justify-center">
       {/* <p>Welcome</p>
@@ -20,12 +31,17 @@ export default function Home() {
         <section className=" w-full">
           <section></section>
 
-          <form className="border flex w-full rounded-md">
+          <form
+            className="border flex w-full rounded-md"
+            onSubmit={handleUserQuery}
+          >
             <input
               className=" py-2 px-2 outline-none flex-1 rounded-l-md"
               placeholder="Enter query"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
             />
-            <button className=" bg-slate-800 px-3 py-1 rounded-r-md">🕊️</button>
+            <button className="bg-slate-800 px-3 py-1 rounded-r-md">🕊️</button>
           </form>
         </section>
       </div>
