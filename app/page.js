@@ -1,10 +1,12 @@
 "use client";
 
-import { createStandaloneQuestion } from "@/config/langchain";
+import { createQuestionAndGetAns } from "@/config/langchain";
+import { formatConvHistory } from "@/utils/formatConvHistory";
 import { useState } from "react";
 
 export default function Home() {
   const [query, setQuery] = useState("");
+  const [convHistory, setConvHistory] = useState([]);
   // async function fetchInfoData() {
   //   try {
   //     const res = await fetch("/data/info.txt");
@@ -17,9 +19,13 @@ export default function Home() {
 
   const handleUserQuery = async (e) => {
     e.preventDefault();
-    console.log(query);
-    const res = await createStandaloneQuestion();
-    console.log(res);
+    setConvHistory((prevHis) => [...prevHis, query]);
+    setQuery("");
+    const res = await createQuestionAndGetAns({
+      question: query,
+      conv_history: formatConvHistory(convHistory),
+    });
+    setConvHistory((prevHis) => [...prevHis, res]);
   };
 
   return (
@@ -29,7 +35,32 @@ export default function Home() {
 
       <div className="w-[500px] h-[600px] shadow-md bg-slate-300 rounded flex items-end p-3">
         <section className=" w-full">
-          <section></section>
+          <section className="h-[500px] overflow-auto px-2 bg-slate-100 py-4 rounded">
+            {convHistory.map((con, idx) => {
+              if (idx % 2 == 0) {
+                return (
+                  <div className="flex justify-end mb-4" key={idx}>
+                    <div className=" flex items-start space-x-2">
+                      <p>{con}</p>
+                      <div className="w-[30px] h-[30px] shrink-0 flex items-center border  justify-center rounded-full bg-slate-600 text-slate-300">
+                        <p>Y</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+              return (
+                <div className="mb-4" key={idx}>
+                  <div className=" flex items-start space-x-2">
+                    <div className="w-[30px] h-[30px] shrink-0 flex items-center border  justify-center rounded-full bg-slate-600 text-slate-300">
+                      <p>B</p>
+                    </div>
+                    <p>{con}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </section>
 
           <form
             className="border flex w-full rounded-md"
