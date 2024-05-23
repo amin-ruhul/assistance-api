@@ -2,7 +2,7 @@
 
 import { createQuestionAndGetAns } from "@/config/langchain";
 import { formatConvHistory } from "@/utils/formatConvHistory";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export default function Home() {
   const [query, setQuery] = useState("");
@@ -16,6 +16,16 @@ export default function Home() {
   //     console.log(error);
   //   }
   // }
+
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [convHistory.length]);
 
   const handleUserQuery = async (e) => {
     e.preventDefault();
@@ -60,6 +70,8 @@ export default function Home() {
                 </div>
               );
             })}
+
+            <div ref={messagesEndRef}></div>
           </section>
 
           <form
