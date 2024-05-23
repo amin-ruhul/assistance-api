@@ -2,6 +2,11 @@ import { PromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { retriever } from "@/utils/retriever";
+import { combineDocuments } from "@/utils/combineDocuments";
+import {
+  RunnableSequence,
+  RunnablePassthrough,
+} from "@langchain/core/runnables";
 
 export async function createStandaloneQuestion() {
   const llm = new ChatOpenAI({
@@ -24,17 +29,39 @@ export async function createStandaloneQuestion() {
 
   const answerPrompt = PromptTemplate.fromTemplate(answerTemplate);
 
-  function combineDocuments(docs) {
-    return docs.map((doc) => doc.pageContent).join("\n\n");
-  }
+  const standaloneChain = standaloneQuestionPrompt.pipe(llm).pipe(stringParser);
+  const retrieverChain = RunnableSequence.from([
+    (prevResult) => prevResult.standalone_question,
+    retriever,
+    combineDocuments,
+  ]);
 
-  const standaloneQuestionChain = standaloneQuestionPrompt
-    .pipe(llm)
-    .pipe(stringParser)
-    .pipe(retriever)
-    .pipe(combineDocuments);
+  const answerChain = answerPrompt.pipe(llm).pipe(stringParser);
 
-  const response = await standaloneQuestionChain.invoke({
+  const chain = RunnableSequence.from([
+    {
+      standalone_question: standaloneChain,
+      original_input: new RunnablePassthrough(),
+    },
+    {
+      context: retrieverChain,
+      question: ({ original_input }) => original_input.question,
+    },
+    answerChain,
+  ]);
+
+  // const standaloneQuestionChain = standaloneQuestionPrompt
+  //   .pipe(llm)
+  //   .pipe(stringParser)
+  //   .pipe(retriever)
+  //   .pipe(combineDocuments);
+
+  // const response = await standaloneQuestionChain.invoke({
+  //   question:
+  //     "What are the technical requirements for running Scrimba? I only have a very old laptop which is not that powerful.",
+  // });
+
+  const response = await chain.invoke({
     question:
       "What are the technical requirements for running Scrimba? I only have a very old laptop which is not that powerful.",
   });
